@@ -148,7 +148,7 @@ def pp_stats_for_heroes(stat_names_list, hero_names_list, all_heroes_career_stat
 		# TODO (mich) better way
 		if hero_name == "dva":
 			hero_name = "dVa" # accounts for weird json response formatting for dva
-		hero_stats["name"].append(hero_name or "n/a")
+		hero_stats[" name"].append(hero_name or "n/a")
 		for subsection, stat in stat_names_list:
 			full_stat_name = ".".join([subsection, stat])
 			try:
@@ -157,12 +157,19 @@ def pp_stats_for_heroes(stat_names_list, hero_names_list, all_heroes_career_stat
 				print("key missing: " + full_stat_name)
 			except TypeError as e:
 				print("type error on " + full_stat_name)
-	print(tabulate(hero_stats, headers="keys"))
+	print(tabulate(hero_stats, headers="keys", tablefmt="grid"))
 
 def get_top_heroes_descending_order(player_stats):
 	top_heroes = [(k, v) for k, v in player_stats["quickPlayStats"]["topHeroes"].items()]
 	# sort descending order by timePlayedInSeconds
 	return sorted(top_heroes, key=lambda hero: hero[1]["timePlayedInSeconds"])
+
+def print_stats_from_player_list(player_names, stat_names_list):
+	for player in player_names:
+		player_stats = stats_by_player_name[player]
+		hero_names = ["allHeroes"] + [k for k, v in get_top_heroes_descending_order(player_stats)[:5]]
+		print("\nSTATS FOR " + player)
+		pp_stats_for_heroes(stat_names_list, hero_names, player_stats["quickPlayStats"]["careerStats"])
 
 # init heroes
 heroes_by_name = {}
@@ -179,18 +186,13 @@ for player_name, player_details in ROSTER.items():
 		stats_dict = json.loads(response.content.decode('utf8'))
 		stats_by_player_name[player_name] = stats_dict
 
-player_name = "sinatraa-11809"
 stat_names_list = [
 	("average", "allDamageDoneAvgPer10Min"),
-	("average", "criticalHitsAvgPer10Min"),
-	("average", "deathsAvgPer10Min"),
-	("average", "eliminationsAvgPer10Min"),
-	("average", "objectiveKillsAvgPer10Min"),
-	("average", "soloKillsAvgPer10Min"),
+	# ("average", "criticalHitsAvgPer10Min"),
+	# ("average", "deathsAvgPer10Min"),
+	# ("average", "eliminationsAvgPer10Min"),
+	# ("average", "objectiveKillsAvgPer10Min"),
+	# ("average", "soloKillsAvgPer10Min"),
 ]
 
-for player in ROSTER.keys():
-	hero_names = ["allHeroes"] + [k for k, v in get_top_heroes_descending_order(stats_dict)[:5]]
-	print("\nSTATS FOR " + player)
-	pp_stats_for_heroes(stat_names_list, hero_names, stats_by_player_name[player]["quickPlayStats"]["careerStats"])
-
+print_stats_from_player_list(ROSTER.keys(), stat_names_list)
